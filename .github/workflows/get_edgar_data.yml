@@ -1,0 +1,25 @@
+name: Call EDGAR API
+
+on:
+  workflow_dispatch:  # Manual trigger
+
+jobs:
+  run-edgar-script:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Set Up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'  # You can change this to match your project’s Python version
+
+      - name: Install Dependencies
+        run: |
+          pip install -r requirements.txt || echo "No requirements file found"
+          pip install requests pandas  # Ensure dependencies are installed
+
+      - name: Run EDGAR API Script
+        run: python call_edgar_api.py  # Make sure the script exists in your repo
