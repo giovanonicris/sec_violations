@@ -1,18 +1,16 @@
 import requests
 import pandas as pd
 
-# Load rule numbers from the CSV file
+# load csv reference file
 rule_numbers_file_path = "rule_numbers.csv"  # Update with your actual path if needed
 rule_numbers_df = pd.read_csv(rule_numbers_file_path)
-
-# Extract File Numbers and Release Numbers
 file_numbers = rule_numbers_df[rule_numbers_df["number_type"] == "file"]["rule_number"].tolist()
 release_numbers = rule_numbers_df[rule_numbers_df["number_type"] == "release"]["rule_number"].tolist()
 
-# SEC EDGAR API endpoint
+# edgar endpoint for search
 EDGAR_SEARCH_API = "https://efts.sec.gov/LATEST/search-index"
 
-# Function to search EDGAR for filings related to a given identifier
+# search EDGAR for filings related to the identifier
 def search_edgar(identifier):
     query = {
         "q": identifier,
@@ -34,10 +32,9 @@ def search_edgar(identifier):
         print(f"Error fetching results for {identifier}: {response.status_code}")
         return None
 
-# Collect results
 results = []
 
-# Search EDGAR for each File Number and Release Number
+# search each file/release numbers
 for identifier in file_numbers + release_numbers:
     data = search_edgar(identifier)
     
@@ -52,10 +49,8 @@ for identifier in file_numbers + release_numbers:
             }
             results.append(filing_info)
 
-# Convert to DataFrame
+# prep and write data frame
 df_results = pd.DataFrame(results)
-
-# Save to CSV
 csv_filename = "edgar_results.csv"
 df_results.to_csv(csv_filename, index=False)
 
