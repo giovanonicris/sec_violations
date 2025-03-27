@@ -1,7 +1,9 @@
 import os
 import requests
 import pandas as pd
+from bs4 import BeautifulSoup
 import time
+
 
 # Load rule numbers from CSV
 rule_numbers_file_path = "rule_numbers.csv"
