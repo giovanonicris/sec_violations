@@ -1,7 +1,7 @@
 name: Call EDGAR API
 
 on:
-  workflow_dispatch:  # Manual trigger
+  workflow_dispatch:  # manual trigger
 
 jobs:
   run-edgar-script:
@@ -14,12 +14,15 @@ jobs:
       - name: Set Up Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.9'  # You can change this to match your project’s Python version
+          python-version: '3.9'
 
       - name: Install Dependencies
         run: |
           pip install -r requirements.txt || echo "No requirements file found"
-          pip install requests pandas  # Ensure dependencies are installed
+          pip install requests pandas  
 
       - name: Run EDGAR API Script
-        run: python call_edgar_api.py  # Make sure the script exists in your repo
+        env:
+          SEC_USER_AGENT: ${{ secrets.SEC_USER_AGENT }}
+        run: python call_edgar_api.py
+
