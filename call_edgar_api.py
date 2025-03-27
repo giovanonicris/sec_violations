@@ -1,43 +1,50 @@
+import os
 import requests
 import pandas as pd
 
-# load csv reference file
-rule_numbers_file_path = "rule_numbers.csv"  # Update with your actual path if needed
+# load rule numbers
+rule_numbers_file_path = "rule_numbers.csv"
 rule_numbers_df = pd.read_csv(rule_numbers_file_path)
 file_numbers = rule_numbers_df[rule_numbers_df["number_type"] == "file"]["rule_number"].tolist()
 release_numbers = rule_numbers_df[rule_numbers_df["number_type"] == "release"]["rule_number"].tolist()
 
-# edgar endpoint for search
+# SEC EDGAR API URL
 EDGAR_SEARCH_API = "https://efts.sec.gov/LATEST/search-index"
 
-# search EDGAR for filings related to the identifier
+# Get SEC User-Agent from GitHub Secret
+user_agent = os.getenv("SEC_USER_AGENT")
+if not user_agent:
+    raise ValueError("Set SEC_USER_AGENT it in GitHub Secrets.")
+
+headers = {
+    "User-Agent": user_agent
+}
+
 def search_edgar(identifier):
     query = {
         "q": identifier,
-        "dateRange": "all",  # Search across all available years
+        "dateRange": "all",
         "start": 0,
-        "count": 10,  # Limit results to 10
+        "count": 10,
         "category": "filings"
-    }
-    
-    headers = {
-        "User-Agent": "YourName-YourEmail"
     }
     
     response = requests.post(EDGAR_SEARCH_API, json=query, headers=headers)
     
     if response.status_code == 200:
         return response.json()
+    elif response.status_code == 403:
+        print(f"403 Forbidden for {identifier} - SEC may be blocking automation.")
     else:
         print(f"Error fetching results for {identifier}: {response.status_code}")
-        return None
+    return None
 
+# collect results
 results = []
 
-# search each file/release numbers
+# search EDGAR
 for identifier in file_numbers + release_numbers:
     data = search_edgar(identifier)
-    
     if data and "hits" in data:
         for item in data["hits"]["hits"]:
             filing_info = {
@@ -49,7 +56,7 @@ for identifier in file_numbers + release_numbers:
             }
             results.append(filing_info)
 
-# prep and write data frame
+# write to data frame
 df_results = pd.DataFrame(results)
 csv_filename = "edgar_results.csv"
 df_results.to_csv(csv_filename, index=False)
